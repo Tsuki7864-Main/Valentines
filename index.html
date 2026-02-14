@@ -7,13 +7,13 @@
     <style>
       /* --- GLOBAL STYLES --- */
       body {
-        font-family: "Comic Sans MS", "Arial", sans-serif; /* Cute font */
-        background-color: #ffe6e6; /* CONSTANT PINK BACKGROUND */
+        font-family: "Comic Sans MS", "Arial", sans-serif;
+        background-color: #ffe6e6;
         margin: 0;
         padding: 0;
         height: 100vh;
         width: 100vw;
-        overflow: hidden; /* Prevents scrolling */
+        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -21,7 +21,7 @@
 
       /* --- PAGE STRUCTURE --- */
       .page {
-        display: none; /* Hidden by default */
+        display: none;
         position: absolute;
         top: 0;
         left: 0;
@@ -30,11 +30,77 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        z-index: 1; /* Behind the curtains */
       }
 
-      /* Show the first page initially */
       #page-1 {
         display: flex;
+      }
+
+      /* --- GLOBAL CURTAIN OVERLAY --- */
+      #curtain-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Let clicks pass through when open */
+        z-index: 9999;
+        display: flex;
+      }
+
+      .curtain-panel {
+        width: 50%;
+        height: 100%;
+        background-color: #b30000;
+        background-image: repeating-linear-gradient(
+          90deg,
+          #b30000,
+          #b30000 30px,
+          #8f0000 30px,
+          #8f0000 60px
+        );
+        transition: transform 2s cubic-bezier(0.77, 0, 0.175, 1);
+        position: relative;
+        z-index: 2;
+      }
+
+      /* Initial State: Open */
+      .panel-left {
+        transform: translateX(-100%);
+      }
+      .panel-right {
+        transform: translateX(100%);
+      }
+
+      /* Closed State */
+      .curtains-closed .panel-left {
+        transform: translateX(0);
+      }
+      .curtains-closed .panel-right {
+        transform: translateX(0);
+      }
+
+      /* Intermission Text (Funny Part) */
+      #intermission-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 0.3s;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        width: 100%;
+      }
+
+      .curtains-closed #intermission-text {
+        opacity: 1;
+        transition-delay: 0.4s; /* Wait for curtains to close before showing text */
       }
 
       /* --- PROPOSAL PAGE STYLES --- */
@@ -73,132 +139,75 @@
         font-weight: bold;
         transition: transform 0.2s;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        flex-direction: row;
       }
 
-      #yes-btn {
-        background-color: #28a745;
-        color: white;
-      }
-      #no-btn {
-        background-color: #dc3545;
-        color: white;
-      }
+      #yes-btn { background-color: #28a745; color: white; }
+      #no-btn { background-color: #dc3545; color: white; }
 
-      /* --- STORY PAGES (2-7) STYLES --- */
-      /* --- STORY PAGES (2-7) STYLES --- */
+      /* --- STORY PAGES STYLES --- */
       .memory-container {
         position: relative;
-        /* Remove fixed width to allow container to shrink to image size */
-        /* width: 100%; max-width: 1000px;  <-- REMOVED */
-
-        /* Change layout to put image and button side-by-side */
         display: flex;
-        flex-direction: row; /* Horizontal layout */
-        align-items: center; /* Center vertically */
+        flex-direction: row;
+        align-items: center;
         justify-content: center;
-        gap: 20px; /* Space between image and button */
+        gap: 20px;
       }
 
-      /* The Center Image */
       .center-photo {
-        /* REMOVED: width: 35rem; height: 45rem; object-fit: cover; */
-
-        /* ADDED: Logic to shrink image without cropping */
         height: auto;
         width: auto;
-        max-height: 75vh; /* Limits height to 75% of screen so it fits */
-        max-width: 70vw; /* Limits width */
-        object-fit: contain; /* Ensures the whole image is visible */
-
+        max-height: 75vh;
+        max-width: 70vw;
+        object-fit: contain;
         border: 8px solid white;
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        z-index: 10;
       }
 
-      /* The Sprite Image */
       .sprite-img {
-        width: 100px; /* CHANGED: Reduced from 150px to 100px */
+        width: 100px;
         height: auto;
       }
 
-      /* The Side Navigation Button */
       .nav-btn {
-        /* No longer needs margin-top since it's on the side */
         background-color: #d63384;
         color: white;
-        /* Optional: Make it a circle or arrow shape since it's on the side */
         padding: 15px 20px;
         border-radius: 50px;
-        white-space: nowrap; /* Keeps text on one line */
       }
 
-      /* --- FINAL PAGE (CURTAINS) --- */
-      #page-final {
-        cursor: pointer;
-        overflow: hidden;
-      }
-
-      .curtain {
-        position: absolute;
-        top: 0;
-        height: 100%;
-        width: 50%;
-        background-color: #b30000;
-        z-index: 100;
-        transition: transform 2s ease-in-out;
-        background-image: repeating-linear-gradient(
-          90deg,
-          #b30000,
-          #b30000 30px,
-          #8f0000 30px,
-          #8f0000 60px
-        );
-      }
-      /* --- FINAL PAGE SPRITE STYLES --- */
-      .final-sprite {
-        position: absolute;
-        bottom: 20px; /* Distance from bottom */
-        right: 30px; /* Distance from right */
+      /* Bubble Styles */
+      .sprite-wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
-        z-index: 50; /* Below curtains (100) but above background */
-        opacity: 0; /* Hidden initially */
-        transition: opacity 2s ease 1s; /* Fades in slowly after 1 second delay */
       }
-
-      /* Ensure the bubble looks right in the corner */
-      .final-sprite .bubble {
+      .bubble {
         margin-bottom: 5px;
         background: white;
-        padding: 15px;
+        padding: 10px 15px;
         border-radius: 15px;
         border: 2px solid #d63384;
         text-align: center;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        max-width: 200px;
       }
 
-      .curtain-left {
-        left: 0;
-      }
-      .curtain-right {
-        right: 0;
-      }
-
-      /* When this class is added, curtains open */
-      .open-left {
-        transform: translateX(-100%);
-      }
-      .open-right {
-        transform: translateX(100%);
+      /* --- FINAL PAGE --- */
+      #page-final {
+        flex-direction: column;
       }
 
       .gift-content {
-        opacity: 0;
-        transition: opacity 2s ease 1s;
         text-align: center;
+        animation: popIn 1s ease;
+      }
+
+      @keyframes popIn {
+        0% { transform: scale(0); opacity: 0; }
+        80% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
       }
 
       .gift-img {
@@ -208,18 +217,22 @@
         box-shadow: 0 0 20px #ff69b4;
       }
 
-      .click-hint {
-        position: absolute;
-        z-index: 101;
-        color: white;
-        background: rgba(0, 0, 0, 0.5);
-        padding: 10px 20px;
-        border-radius: 20px;
-        pointer-events: none;
+      .final-sprite {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
     </style>
   </head>
   <body>
+
+    <div id="curtain-overlay">
+      <div class="curtain-panel panel-left"></div>
+      <div id="intermission-text"></div>
+      <div class="curtain-panel panel-right"></div>
+    </div>
+
     <div id="page-1" class="page">
       <img
         id="main-gif"
@@ -227,11 +240,9 @@
         src="images/fa68fb77c89703a9b1e5862f89242ea1.gif"
         alt="Will you be my Valentine?"
       />
-
       <h1>Will you be my Valentine?</h1>
-
       <div class="btn-box">
-        <button id="yes-btn" onclick="startStory()">Yes</button>
+        <button id="yes-btn" onclick="transitionToPage(2)">Yes</button>
         <button id="no-btn" onclick="handleNo()">No</button>
       </div>
     </div>
@@ -239,87 +250,76 @@
     <div id="page-2" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss1.png" alt="Memory 1" />
-
-        <div class="sprite-wrapper pos-right">
+        <div class="sprite-wrapper">
           <div class="bubble">Remember this day?</div>
           <img class="sprite-img" src="images/shy.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage(3)">Next &rarr;</button>
+      <button class="nav-btn" onclick="transitionToPage(3)">Next &rarr;</button>
     </div>
 
     <div id="page-3" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss2.png" alt="Memory 2" />
-
-        <div class="sprite-wrapper pos-left">
+        <div class="sprite-wrapper">
           <div class="bubble">"Yo" kill me</div>
           <img class="sprite-img" src="images/shock.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage(4)">Next &rarr;</button>
+      <button class="nav-btn" onclick="transitionToPage(4)">Next &rarr;</button>
     </div>
 
     <div id="page-4" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss3.png" alt="Memory 3" />
-
-        <div class="sprite-wrapper pos-right">
+        <div class="sprite-wrapper">
           <div class="bubble">I love you Lin</div>
           <div class="bubble">Your words pushed me forward</div>
           <div class="bubble">(P.s. I won tho)</div>
           <img class="sprite-img" src="images/heart1.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage(5)">Next &rarr;</button>
+      <button class="nav-btn" onclick="transitionToPage(5)">Next &rarr;</button>
     </div>
 
     <div id="page-5" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss4.png" alt="Memory 4" />
-
-        <div class="sprite-wrapper pos-left">
+        <div class="sprite-wrapper">
           <div class="bubble">you had so much excitement and enthusiasm</div>
           <img class="sprite-img" src="images/heart2.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage(6)">Next &rarr;</button>
+      <button class="nav-btn" onclick="transitionToPage(6)">Next &rarr;</button>
     </div>
 
     <div id="page-6" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss5.png" alt="Memory 5" />
-
-        <div class="sprite-wrapper pos-right">
+        <div class="sprite-wrapper">
           <div class="bubble">Copycat (I won again, heh)</div>
           <img class="sprite-img" src="images/heart3.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage(7)">Next &rarr;</button>
+      <button class="nav-btn" onclick="transitionToPage(7)">Next &rarr;</button>
     </div>
 
     <div id="page-7" class="page">
       <div class="memory-container">
         <img class="center-photo" src="images/ss6.png" alt="Memory 6" />
-
-        <div class="sprite-wrapper pos-left">
+        <div class="sprite-wrapper">
           <div class="bubble">
             I lost this one....I'll get you again next week :mad:
           </div>
           <img class="sprite-img" src="images/heart4.png" alt="Sprite" />
         </div>
       </div>
-      <button class="nav-btn" onclick="nextPage('final')">
+      <button class="nav-btn" onclick="transitionToPage('final')">
         One last surprise &rarr;
       </button>
     </div>
 
-    <div id="page-final" class="page" onclick="revealGift()">
-      <div class="curtain curtain-left" id="c-left"></div>
-      <div class="curtain curtain-right" id="c-right"></div>
-
-      <div class="click-hint" id="hint">TAP TO REVEAL</div>
-
+    <div id="page-final" class="page">
       <div class="gift-content" id="gift-box">
         <h1>Surprise!!!</h1>
         <h1>Happy Valentine's Day My Love! ❤️</h1>
@@ -335,9 +335,17 @@
 
     <script>
       // === CONFIGURATION ===
-      // [INSERT SAD GIF HERE] - This is the constant GIF for when she clicks No
-      const sadGifUrl =
-        "https://i.pinimg.com/originals/fa/68/fb/fa68fb77c89703a9b1e5862f89242ea1.gif";
+      const sadGifUrl = "https://i.pinimg.com/originals/fa/68/fb/fa68fb77c89703a9b1e5862f89242ea1.gif";
+      
+      // Funny texts to show while curtains are closed
+      const intermissionMessages = [
+        "Boom",
+        "Kaboom",
+        "Boom Shakalaka",
+        "Booty",
+        "lovely day we're having",
+        "Dramatic noises",
+      ];
 
       let noCount = 0;
 
@@ -346,52 +354,46 @@
         const yesBtn = document.getElementById("yes-btn");
         const gif = document.getElementById("main-gif");
 
-        // 1. Set constant sad GIF
         gif.src = sadGifUrl;
 
-        // 2. Change Text
-        const phrases = [
-          "Are you sure?",
-          "Really?",
-          "Pleease?",
-          "Don't do this!",
-          "Just click Yes!",
-        ];
+        const phrases = ["Are you sure?", "Really?", "Pleease?", "Don't do this!", "Just click Yes!"];
         noBtn.innerText = phrases[Math.min(noCount, phrases.length - 1)];
 
-        // 3. Grow Yes Button
         noCount++;
         let size = 1.2 + noCount * 0.4;
         yesBtn.style.transform = `scale(${size})`;
       }
 
-      function startStory() {
-        document.getElementById("page-1").style.display = "none";
-        document.getElementById("page-2").style.display = "flex";
-      }
+      // --- THE NEW TRANSITION FUNCTION ---
+      function transitionToPage(nextPageNum) {
+        const overlay = document.getElementById('curtain-overlay');
+        const textBox = document.getElementById('intermission-text');
+        
+        // 1. Pick a random funny message
+        const randomMsg = intermissionMessages[Math.floor(Math.random() * intermissionMessages.length)];
+        textBox.innerText = randomMsg;
 
-      function nextPage(num) {
-        // Hide all pages
-        document
-          .querySelectorAll(".page")
-          .forEach((p) => (p.style.display = "none"));
+        // 2. Close Curtains
+        overlay.classList.add('curtains-closed');
 
-        if (num === "final") {
-          document.getElementById("page-final").style.display = "flex";
-        } else {
-          document.getElementById("page-" + num).style.display = "flex";
-        }
-      }
+        // 3. Wait for curtain to close (800ms match css)
+        setTimeout(() => {
+          // Hide all pages
+          document.querySelectorAll(".page").forEach((p) => (p.style.display = "none"));
 
-      function revealGift() {
-        // Open Curtains
-        document.getElementById("c-left").classList.add("open-left");
-        document.getElementById("c-right").classList.add("open-right");
-        document.getElementById("hint").style.display = "none";
+          // Show specific page
+          if (nextPageNum === 'final') {
+            document.getElementById("page-final").style.display = "flex";
+          } else {
+            document.getElementById("page-" + nextPageNum).style.display = "flex";
+          }
 
-        // Show Gift
-        document.getElementById("gift-box").style.opacity = "1";
-        document.getElementById("final-sprite").style.opacity = "1";
+          // 4. Open Curtains after a short delay to read text
+          setTimeout(() => {
+            overlay.classList.remove('curtains-closed');
+          }, 600); 
+
+        }, 2000);
       }
     </script>
   </body>
